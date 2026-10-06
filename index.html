@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AI 配色 palette-maker-ai</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:860px;margin:24px auto;padding:0 16px}
+.swatch{display:inline-block;width:140px;height:100px;margin:6px;border-radius:8px;vertical-align:top;cursor:pointer}
+.swatch span{display:block;background:rgba(255,255,255,.85);padding:4px;font-size:12px;border-radius:0 0 8px 8px;margin-top:64px}
+</style>
+</head>
+<body>
+<h1>AI 配色 palette-maker-ai</h1>
+<p>由基色按 HSL 规则（互补 / 类比 / 三色）生成方案。点击色块复制 hex。无 API Key。</p>
+<div class="card">
+  基色：<input type="color" id="base" value="#3b82f6">
+  规则：<select id="rule">
+    <option value="complement">互补</option><option value="analogous">类比</option><option value="triadic">三色</option></select>
+  <button onclick="gen()">生成</button></div>
+<div id="out"></div>
+<script>
+function hexToHsl(hex){hex=hex.replace('#','');if(hex.length===3)hex=hex.split('').map(c=>c+c).join('');const r=parseInt(hex.slice(0,2),16)/255,g=parseInt(hex.slice(2,4),16)/255,b=parseInt(hex.slice(4,6),16)/255;const max=Math.max(r,g,b),min=Math.min(r,g,b);let h=0,s=0,l=(max+min)/2;if(max!==min){const d=max-min;s=l>0.5?d/(2-max-min):d/(max+min);switch(max){case r:h=(g-b)/d+(g<b?6:0);break;case g:h=(b-r)/d+2;break;case b:h=(r-g)/d+4;break;}h*=60;}return{h,s:Math.round(s*100),l:Math.round(l*100)};}
+function hslToHex(h,s,l){h=((h%360)+360)%360;s/=100;l/=100;const c=(1-Math.abs(2*l-1))*s,x=c*(1-Math.abs((h/60)%2-1)),m=l-c/2;let r=0,g=0,b=0;if(h<60){r=c;g=x;}else if(h<120){r=x;g=c;}else if(h<180){g=c;b=x;}else if(h<240){g=x;b=c;}else if(h<300){r=x;b=c;}else{r=c;b=x;}const to=v=>Math.round((v+m)*255).toString(16).padStart(2,'0');return '#'+to(r)+to(g)+to(b);}
+function palette(baseHex,rule){const{h,s,l}=hexToHsl(baseHex);let hues;if(rule==='complement')hues=[h,h+180];else if(rule==='analogous')hues=[h-30,h,h+30];else hues=[h,h+120,h+240];return hues.map(hh=>hslToHex(hh,s,l));}
+if(typeof module!=='undefined'){module.exports={hexToHsl,hslToHex,palette};}
+function gen(){const base=document.getElementById('base').value;const rule=document.getElementById('rule').value;const colors=palette(base,rule);document.getElementById('out').innerHTML=colors.map(c=>`<div class="swatch" style="background:${c}" onclick="copyHex('${c}')"><span>${c}</span></div>`).join('');}
+function copyHex(c){navigator.clipboard&&navigator.clipboard.writeText(c);}
+gen();
+</script>
+</body>
+</html>
